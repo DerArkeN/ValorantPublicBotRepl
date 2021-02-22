@@ -5,11 +5,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mydb = mysql.connector.connect(
-    host=os.getenv("HOST"),
-    user=os.getenv("USER"),
-    password=os.getenv("PASSWORD"),
-    database=os.getenv("DATABASE"))
+mydb = mysql.connector.connect(host=os.getenv("HOST"),
+                               user=os.getenv("USER"),
+                               password=os.getenv("PASSWORD"),
+                               database=os.getenv("DATABASE"))
 
 
 def user_exists(id):
@@ -223,3 +222,7 @@ def delete_lftdata(executor_or_message_or_channel):
     cursor.execute("DELETE FROM LFTData WHERE Executor OR Channel OR Message = (%s)", (executor_or_message_or_channel,))
     mydb.commit()
     cursor.close()
+
+
+def close():
+    mydb.close()

@@ -15,6 +15,7 @@ valid_roles = ["Iron 1", "Iron 2", "Iron 3",
 unvalid_roles = ["Administrator",
                  "Moderator"]
 
+
 async def get_executor(channel_or_message, bot):
     id = sql.get_executor(channel_or_message.id)
     guild = bot.get_guild(806081402407092295)

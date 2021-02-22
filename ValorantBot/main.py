@@ -133,5 +133,6 @@ async def on_disconnect():
     sql.mydb.close()
     print("Valorant Bot logged out")
 
-keep_alive()
+
+#keep_alive()
 bot.run(os.getenv("TOKEN"))

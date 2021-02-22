@@ -7,10 +7,10 @@ async def register(ctx, name, rank, vclient, bot):
         if name is not None:
             if rank is not None:
                 try:
-                    valUser = vclient.get_user(name, "name")
-                    valTag = valUser.__getattribute__("tagLine")
-                    valName = valUser.__getattribute__("gameName")
-                    valPUUID = valUser.__getattribute__("puuid")
+                  valUser = vclient.get_user_by_name(name, delim="#")
+                  valTag = valUser.__getattribute__("tagLine")
+                  valName = valUser.__getattribute__("gameName")
+                  valPUUID = valUser.__getattribute__("puuid")
                 except:
                     await ctx.send("There was an error with the Riot API. (Check your name and tag).")
                     return
