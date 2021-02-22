@@ -24,7 +24,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print("'Valorant Public Bot' logged in")
-    print(sql.mydb)
     sql.create_table()
 
 
@@ -134,5 +133,5 @@ async def on_disconnect():
     print("Valorant Bot logged out")
 
 
-#keep_alive()
+keep_alive()
 bot.run(os.getenv("TOKEN"))
