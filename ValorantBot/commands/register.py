@@ -12,7 +12,7 @@ async def register(ctx, name, rank, vclient, bot):
                   valName = valUser.__getattribute__("gameName")
                   valPUUID = valUser.__getattribute__("puuid")
                 except:
-                    await ctx.send("There was an error with the Riot API. (Check your name and tag).")
+                    await ctx.send("There was an error with the Riot API. (Check your name and tag and/or try again later).")
                     return
 
                 dcUser = ctx.author
