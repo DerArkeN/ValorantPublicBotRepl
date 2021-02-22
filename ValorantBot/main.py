@@ -4,6 +4,7 @@ import discord
 
 from discord.ext import commands
 from dotenv import load_dotenv
+from keep_alive import keep_alive
 
 from commands import lft, register, rank
 from util import sql, methods
@@ -96,76 +97,6 @@ async def on_voice_state_update(member, before, after):
                             await methods.set_closed(after.channel, bot)
 
 
-@bot.event
-async def on_disconnect():
-    sql.mydb.close()
-    print("Valorant Bot logged out")
-
-
-@bot.event
-async def on_voice_state_update(member, before, after):
-    join_to_create = bot.get_channel(809430391177084969)
-    join_to_create_category = join_to_create.category
-
-    if before.channel != after.channel:
-        if not member.bot:
-            if after.channel == join_to_create:
-                if member.nick is not None:
-                    new_voice = await member.guild.create_voice_channel(name=member.nick + "'s channel", category=join_to_create_category)
-                    await member.move_to(new_voice)
-
-        if before.channel is not None:
-            # delete temp channels
-            if before.channel.category == join_to_create_category:
-                if before.channel != join_to_create:
-                    if len(before.channel.members) == 0:
-                        await before.channel.delete()
-                    # delete channel reaction
-                    await lft.lft_leave_channel(member, before, bot)
-
-        if after.channel is not None:
-            if after.channel.category == join_to_create_category:
-                if after.channel != join_to_create:
-                    if len(after.channel.members) >= 5:
-                        if sql.channel_exists(after.channel):
-                            await methods.set_closed(after.channel, bot)
-
-
-@bot.event
-async def on_disconnect():
-    sql.mydb.close()
-    print("Valorant Bot logged out")
-
-
-@bot.event
-async def on_voice_state_update(member, before, after):
-    join_to_create = bot.get_channel(809430391177084969)
-    join_to_create_category = join_to_create.category
-
-    if before.channel != after.channel:
-        if not member.bot:
-            if after.channel == join_to_create:
-                if member.nick is not None:
-                    new_voice = await member.guild.create_voice_channel(name=member.nick + "'s channel", category=join_to_create_category)
-                    await member.move_to(new_voice)
-
-        if before.channel is not None:
-            # delete temp channels
-            if before.channel.category == join_to_create_category:
-                if before.channel != join_to_create:
-                    if len(before.channel.members) == 0:
-                        await before.channel.delete()
-                    # delete channel reaction
-                    await lft.lft_leave_channel(member, before, bot)
-
-        if after.channel is not None:
-            if after.channel.category == join_to_create_category:
-                if after.channel != join_to_create:
-                    if len(after.channel.members) >= 5:
-                        if sql.channel_exists(after.channel):
-                            await methods.set_closed(after.channel, bot)
-
-
 @bot.command(name="register", pass_context=True)
 async def register_command(ctx, name=None, rank=None):
     await register.register(ctx, name, rank, vclient, bot)
@@ -202,5 +133,5 @@ async def on_disconnect():
     sql.mydb.close()
     print("Valorant Bot logged out")
 
-
+keep_alive()
 bot.run(os.getenv("TOKEN"))
