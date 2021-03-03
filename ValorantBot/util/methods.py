@@ -1,6 +1,12 @@
 import numpy
+import os
+import discord
+
+from dotenv import load_dotenv
 from discord.utils import get
 from util import sql
+
+load_dotenv()
 
 valid_roles = ["Iron 1", "Iron 2", "Iron 3",
                "Bronze 1", "Bronze 2", "Bronze 3",
@@ -18,13 +24,13 @@ unvalid_roles = ["Administrator",
 
 async def get_executor(channel_or_message, bot):
     id = sql.get_executor(channel_or_message.id)
-    guild = bot.get_guild(806081402407092295)
+    guild = get_guild(bot)
     return await guild.fetch_member(id)
 
 
 async def get_msg(executor_or_channel, bot):
     id = sql.get_message(executor_or_channel.id)
-    channel = bot.get_channel(806109172336689162)
+    channel = get_channel_lft(bot)
     return await channel.fetch_message(id)
 
 
@@ -36,34 +42,28 @@ async def get_channel(executor_or_message, bot):
 async def set_lft(executor, bot):
     if not sql.executor_exists(executor):
         channel = executor.voice.channel
-        lft_channel = bot.get_channel(806109172336689162)
-        user_role = get_rank(executor)
+        lft_channel = get_channel_lft(bot)
 
-        await channel.set_permissions(get(executor.guild.roles, id=806081402407092295), connect=False)
-        msg = await lft_channel.send(
-            content=executor.mention + " is looking for teammates for ranked, he is " + user_role.name + ". Join a channel and react to the message to join the channel. There are currently " + str(
-                len(executor.voice.channel.members)) + "/5 player in the channel.",
-            delete_after=900)
+        await channel.set_permissions(get_role_everyone(bot), connect=False)
+        msg = await lft_channel.send(embed=await create_embed(executor, bot), delete_after=900)
         await msg.add_reaction('✅')
         sql.insert_lftdata(executor.id, msg.id, channel.id)
 
 
 async def set_closed(channel, bot):
-    executor = await get_executor(channel, bot)
     msg = await get_msg(channel, bot)
 
-    await channel.set_permissions(get(executor.guild.roles, id=806081402407092295), connect=False)
+    await channel.set_permissions(get_role_everyone(bot), connect=False)
     await msg.delete()
     sql.delete_lftdata(channel.id)
 
 
 async def set_casual(channel, bot):
     msg = await get_msg(channel, bot)
-    executor = await get_executor(channel, bot)
 
     await msg.delete()
     if len(channel.members) != 0:
-        await channel.set_permissions(get(executor.guild.roles, id=806081402407092295), connect=True)
+        await channel.set_permissions(get_role_everyone(bot), connect=True)
     sql.delete_lftdata(channel.id)
 
 
@@ -135,3 +135,48 @@ async def check_profile(member, vclient):
                             sql.update_name(member.id, valName)
                         except PermissionError:
                             print("error updating username. it would've been set to " + valName + "#" + valTag)
+
+
+async def create_embed(executor, bot):
+  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates, react to the message to join.")
+  embed.add_field(name="Rank:", value=get_rank(executor).name)
+  embed.add_field(name="Players:", value=str(len(executor.voice.channel.members))+"/5")
+  invite = await get_voice_wtf(bot).create_invite(max_age=900, max_uses=1, temporary=False, unique=False, reason="Temp Inv")
+  embed.add_field(name="Join Channel:", value="[Click to join]("+invite.url+")")
+  return embed
+
+
+def get_channel_support(bot):
+  id = os.getenv("CHANNEL_SUPPORT")
+  return bot.get_channel(int(id))
+
+def get_channel_commands(bot):
+  id = os.getenv("CHANNEL_COMMANDS")
+  return bot.get_channel(int(id))
+
+def get_channel_lft(bot):
+  id = os.getenv("CHANNEL_LFT")
+  return bot.get_channel(int(id))
+
+def get_channel_rules(bot):
+  id = os.getenv("CHANNEL_RULES")
+  return bot.get_channel(int(id))
+
+def get_voice_create_channel(bot):
+  id = os.getenv("VOICE_CREATE_CHANNEL")
+  return bot.get_channel(int(id))
+
+def get_voice_wtf(bot):
+  id = os.getenv("VOICE_WTF")
+  return bot.get_channel(int(id))
+
+def get_role_everyone(bot):
+  id = os.getenv("ROLE_EVERYONE")
+  return get(get_guild(bot).roles, id=int(id))
+
+def get_guild(bot):
+  id = os.getenv("GUILD")
+  return bot.get_guild(int(id))
+
+def get_bot(bot):
+  return bot.client

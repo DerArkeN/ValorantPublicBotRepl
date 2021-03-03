@@ -3,7 +3,7 @@ from util import methods, sql
 
 
 async def rank(ctx, rank, bot):
-    if ctx.channel == bot.get_channel(806084486869417984):
+    if ctx.channel == methods.get_channel_commands(bot):
         if rank is not None:
             dcUser = ctx.author
             if any(ext in rank for ext in methods.valid_roles):
@@ -19,7 +19,7 @@ async def rank(ctx, rank, bot):
         else:
             await ctx.send("You have to enter a rank.")
     else:
-        await bot.get_channel(806112383693094942).send(content=ctx.author.mention + " you can't use this command here, got to " + bot.get_channel(806084486869417984).mention, delete_after=30)
+        await methods.get_channel_support(bot).send(content=ctx.author.mention + " you can't use this command here, got to " + methods.get_channel_commands(bot), delete_after=30)
         await ctx.channel.purge(limit=1)
 
 

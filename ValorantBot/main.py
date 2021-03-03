@@ -4,7 +4,7 @@ import discord
 
 from discord.ext import commands
 from dotenv import load_dotenv
-from keep_alive import keep_alive
+#from keep_alive import keep_alive
 
 from commands import lft, register, rank
 from util import sql, methods
@@ -29,12 +29,14 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    channel_support = bot.get_channel(806112383693094942)
-    channel_rules = bot.get_channel(806088311848435732)
-    await channel_support.send(content=
-    'Welcome to the Public Valorant Server, ' + member.mention + '\n\nStart of by reading the rules in ' + channel_rules.mention +
-    ' and have a look into the server tutorial.' + '\n\nNow you have full access on the Discord Server, if any questions come up feel free to tag an Moderator or an Administrator for important questions.\n'
-    , delete_after=900)
+    channel_support = methods.get_channel_support(bot)
+    channel_rules = methods.get_channel_rules(bot)
+    await channel_support.send(
+        content='Welcome to the Public Valorant Server, ' + member.mention +
+        '\n\nStart of by reading the rules in ' + channel_rules.mention +
+        ' and have a look into the server tutorial.' +
+        '\n\nNow you have full access on the Discord Server, if any questions come up feel free to tag an Moderator or an Administrator for important questions.\n',
+        delete_after=900)
 
 
 @bot.event
@@ -44,21 +46,17 @@ async def on_member_remove(member):
             sql.delete_user(member.id)
 
 
-def is_bot(message):
-    return message.author != bot.get_user(806461492450426900)
-
-
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
-    if message.channel == bot.get_channel(806109172336689162):
-        if message.author != bot.get_user(806461492450426900):
+    if message.channel == methods.get_channel_lft(bot):
+        if not message.author.bot:
             await message.delete()
 
 
 @bot.event
 async def on_reaction_add(reaction, user):
-    if user != bot.get_user(806461492450426900):
+    if not user.bot:
         await lft.lft_event_add(reaction, user, bot)
 
 
@@ -69,14 +67,16 @@ async def on_reaction_remove(reaction, user):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    join_to_create = bot.get_channel(809430391177084969)
+    join_to_create = methods.get_voice_create_channel(bot)
     join_to_create_category = join_to_create.category
 
     if before.channel != after.channel:
         if not member.bot:
             if after.channel == join_to_create:
                 if member.nick is not None:
-                    new_voice = await member.guild.create_voice_channel(name=member.nick + "'s channel", category=join_to_create_category)
+                    new_voice = await member.guild.create_voice_channel(
+                        name=member.nick + "'s channel",
+                        category=join_to_create_category)
                     await member.move_to(new_voice)
 
         if before.channel is not None:
@@ -113,7 +113,7 @@ async def lft_command(ctx):
 
 @bot.command(name="update", pass_context=True)
 async def update_command(ctx):
-    if ctx.channel == bot.get_channel(806084486869417984):
+    if ctx.channel == methods.get_channel_commands(bot):
         await methods.check_profile(ctx.author, vclient)
         await ctx.send("Your profile has been updated.")
 
@@ -124,8 +124,11 @@ async def close_command(ctx):
         if sql.channel_exists(ctx.author.voice.channel):
             await methods.set_closed(ctx.author.voice.channel, bot)
         else:
-            await bot.get_channel(806112383693094942).send(content=ctx.author.mention + ", you need to use !lft before using !close.", delete_after=30)
+            await bot.get_channel(806112383693094942).send(
+                content=ctx.author.mention +
+                ", you need to use !lft before using !close.",
+                delete_after=30)
 
 
-keep_alive()
+#keep_alive()
 bot.run(os.getenv("TOKEN"))

@@ -3,7 +3,7 @@ from util import methods, sql
 
 
 async def register(ctx, name, rank, vclient, bot):
-    if ctx.channel == bot.get_channel(806084486869417984):
+    if ctx.channel == methods.get_channel_commands(bot):
         if name is not None:
             if rank is not None:
                 try:
@@ -39,5 +39,5 @@ async def register(ctx, name, rank, vclient, bot):
         else:
             await ctx.send("You have to enter a name.")
     else:
-        await bot.get_channel(806112383693094942).send(content=ctx.author.mention + "you can't use this command here, got to " + bot.get_channel(806084486869417984).mention, delete_after=30)
+        await methods.get_channel_support(bot).send(content=ctx.author.mention + "you can't use this command here, got to " + methods.get_channel_commands(bot).mention, delete_after=30)
         await ctx.channel.purge(limit=1)
