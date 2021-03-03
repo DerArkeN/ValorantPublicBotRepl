@@ -127,11 +127,5 @@ async def close_command(ctx):
             await bot.get_channel(806112383693094942).send(content=ctx.author.mention + ", you need to use !lft before using !close.", delete_after=30)
 
 
-@bot.event
-async def on_disconnect():
-    sql.mydb.close()
-    print("Valorant Bot logged out")
-
-
 keep_alive()
 bot.run(os.getenv("TOKEN"))

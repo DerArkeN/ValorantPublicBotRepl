@@ -111,7 +111,7 @@ async def check_profile(member, vclient):
                 if sql.user_exists(member.id):
                     valPUUID = sql.get_puuid(member.id)
 
-                    valUser = vclient.get_user(valPUUID, "puuid")
+                    valUser = vclient.get_user_by_puuid(valPUUID)
                     valTag = valUser.__getattribute__("tagLine")
                     valName = valUser.__getattribute__("gameName")
 
