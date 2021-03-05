@@ -8,6 +8,8 @@ from util import sql
 
 load_dotenv()
 
+invite_from_embed = {}
+
 valid_roles = ["Iron 1", "Iron 2", "Iron 3",
                "Bronze 1", "Bronze 2", "Bronze 3",
                "Silver 1", "Silver 2", "Silver 3",
@@ -23,13 +25,13 @@ unvalid_roles = ["Administrator",
 
 
 async def get_executor(channel_or_message, bot):
-    id = sql.get_executor(channel_or_message.id)
+    id = sql.get_executor(channel_or_message)
     guild = get_guild(bot)
     return await guild.fetch_member(id)
 
 
 async def get_msg(executor_or_channel, bot):
-    id = sql.get_message(executor_or_channel.id)
+    id = sql.get_message(executor_or_channel)
     channel = get_channel_lft(bot)
     return await channel.fetch_message(id)
 
@@ -47,7 +49,7 @@ async def set_lft(executor, bot):
         await channel.set_permissions(get_role_everyone(bot), connect=False)
         msg = await lft_channel.send(embed=await create_embed(executor, bot), delete_after=900)
         await msg.add_reaction('✅')
-        sql.insert_lftdata(executor.id, msg.id, channel.id)
+        sql.insert_lftdata(executor, msg, channel)
 
 
 async def set_closed(channel, bot):
@@ -55,16 +57,24 @@ async def set_closed(channel, bot):
 
     await channel.set_permissions(get_role_everyone(bot), connect=False)
     await msg.delete()
-    sql.delete_lftdata(channel.id)
+    sql.delete_lftdata(channel)
+    try:
+      await invite_from_embed[msg.embeds[0].url].delete()
+    except discord.errors.NotFound:
+      pass
 
 
 async def set_casual(channel, bot):
     msg = await get_msg(channel, bot)
 
     await msg.delete()
+    sql.delete_lftdata(channel)
+    try:
+      await invite_from_embed[msg.embeds[0].url].delete()
+    except discord.errors.NotFound:
+      pass
     if len(channel.members) != 0:
         await channel.set_permissions(get_role_everyone(bot), connect=True)
-    sql.delete_lftdata(channel.id)
 
 
 def get_rank(dcUser):
@@ -138,13 +148,18 @@ async def check_profile(member, vclient):
 
 
 async def create_embed(executor, bot):
-  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates, react to the message to join.")
+  channel = executor.voice.channel
+  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates, click the link below to join.")
   embed.add_field(name="Rank:", value=get_rank(executor).name)
   embed.add_field(name="Players:", value=str(len(executor.voice.channel.members))+"/5")
-  invite = await get_voice_wtf(bot).create_invite(max_age=900, max_uses=1, temporary=False, unique=False, reason="Temp Inv")
+  invite = await channel.create_invite(max_age=900, max_uses=0, temporary=False, unique=False, reason="Temp Inv")
   embed.add_field(name="Join Channel:", value="[Click to join]("+invite.url+")")
+  invite_from_embed[embed.url] = invite
   return embed
 
+
+def execute_move(member):
+  print(member.nick, "test")
 
 def get_channel_support(bot):
   id = os.getenv("CHANNEL_SUPPORT")

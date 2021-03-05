@@ -60,7 +60,7 @@ def executor_exists(executor):
   try:
       cursor.execute("SELECT COUNT(*) FROM LFTData WHERE Executor = (%s)", (executor.id,))
   except AttributeError:
-      cursor.execute("SELECT COUNT(*) FROM LFTData WHERE Executor = (%s)", (executor,))
+      cursor.execute("SELECT COUNT(*) FROM LFTData WHERE Executor = (%s)", (executor.id,))
   data = cursor.fetchone()[0]
   if data == 0:
       return False
@@ -106,14 +106,14 @@ def insert_lftdata(executor, message, channel):
   cursor = mydb.cursor()
   if not executor_exists(executor):
       qry = "INSERT INTO LFTData (Executor, Message, Channel) VALUES (%s, %s, %s)"
-      val = (executor, message, channel)
+      val = (executor.id, message.id, channel.id)
       cursor.execute(qry, val)
       mydb.commit()
       close(mydb, cursor)
       return 0
   else:
       qry = "UPDATE LFTData SET Message = %s, Channel = %s WHERE Executor = %s"
-      val = (message, channel, executor)
+      val = (message.id, channel.id, executor.id)
       cursor.execute(qry, val)
       mydb.commit()
       close(mydb, cursor)
@@ -200,7 +200,7 @@ def get_rank(id):
 def get_executor(channel_or_message):
   mydb = open()
   cursor = mydb.cursor()
-  cursor.execute("SELECT Executor FROM LFTData WHERE Channel OR Message = (%s)", (channel_or_message,))
+  cursor.execute("SELECT Executor FROM LFTData WHERE Channel OR Message = (%s)", (channel_or_message.id,))
   result = cursor.fetchone()[0]
   close(mydb, cursor)
   return result
@@ -209,7 +209,7 @@ def get_executor(channel_or_message):
 def get_channel(executor_or_message):
   mydb = open()
   cursor = mydb.cursor()
-  cursor.execute("SELECT Channel FROM LFTData WHERE Executor OR Message = (%s)", (executor_or_message,))
+  cursor.execute("SELECT Channel FROM LFTData WHERE Executor OR Message = (%s)", (executor_or_message.id,))
   result = cursor.fetchone()[0]
   close(mydb, cursor)
   return result
@@ -218,7 +218,7 @@ def get_channel(executor_or_message):
 def get_message(channel_or_executor):
   mydb = open()
   cursor = mydb.cursor()
-  cursor.execute("SELECT Message FROM LFTData WHERE Channel OR Executor = (%s)", (channel_or_executor,))
+  cursor.execute("SELECT Message FROM LFTData WHERE Channel OR Executor = (%s)", (channel_or_executor.id,))
   result = cursor.fetchone()[0]
   close(mydb, cursor)
   return result
@@ -247,6 +247,6 @@ def delete_user_puuid(puuid):
 def delete_lftdata(executor_or_message_or_channel):
   mydb = open()
   cursor = mydb.cursor()
-  cursor.execute("DELETE FROM LFTData WHERE Executor OR Channel OR Message = (%s)", (executor_or_message_or_channel,))
+  cursor.execute("DELETE FROM LFTData WHERE Executor OR Channel OR Message = (%s)", (executor_or_message_or_channel.id,))
   mydb.commit()
   close(mydb, cursor)
