@@ -21,7 +21,10 @@ valid_roles = ["Iron 1", "Iron 2", "Iron 3",
                ]
 
 unvalid_roles = ["Administrator",
-                 "Moderator"]
+                 "Moderator",
+                 "Valorant Public Bot",
+                 "Valorant Public Bot Test",
+                 "@everyone"]
 
 
 async def get_executor(channel_or_message, bot):

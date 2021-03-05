@@ -88,12 +88,12 @@ async def on_voice_state_update(member, before, after):
 
 
 @bot.command(name="register", pass_context=True)
-async def register_command(ctx, name=None, rank=None):
+async def register_command(ctx, name: str, rank: discord.Role):
     await register.register(ctx, name, rank, vclient, bot)
 
 
 @bot.command(name="rank", pass_context=True)
-async def rank_command(ctx, role=None):
+async def rank_command(ctx, role: discord.Role):
     await rank.rank(ctx, role, bot)
 
 
