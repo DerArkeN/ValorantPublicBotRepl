@@ -48,7 +48,6 @@ async def set_lft(executor, bot):
 
         await channel.set_permissions(get_role_everyone(bot), connect=False)
         msg = await lft_channel.send(embed=await create_embed(executor, bot), delete_after=900)
-        await msg.add_reaction('✅')
         sql.insert_lftdata(executor, msg, channel)
 
 
