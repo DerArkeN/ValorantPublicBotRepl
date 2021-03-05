@@ -41,13 +41,13 @@ async def get_channel(executor_or_message, bot):
     return await bot.get_channel(id)
 
 
-async def set_lft(executor, bot):
+async def set_lft(executor, argument, bot):
     if not sql.executor_exists(executor):
         channel = executor.voice.channel
         lft_channel = get_channel_lft(bot)
 
         await channel.set_permissions(get_role_everyone(bot), connect=False)
-        msg = await lft_channel.send(embed=await create_embed(executor, bot), delete_after=900)
+        msg = await lft_channel.send(embed=await create_embed(executor, argument, bot), delete_after=900)
         sql.insert_lftdata(executor, msg, channel)
 
 
@@ -59,7 +59,7 @@ async def set_closed(channel, bot):
     sql.delete_lftdata(channel)
     try:
       await invite_from_embed[msg.embeds[0].url].delete()
-    except discord.errors.NotFound:
+    except (discord.errors.NotFound, KeyError):
       pass
 
 
@@ -70,7 +70,7 @@ async def set_casual(channel, bot):
     sql.delete_lftdata(channel)
     try:
       await invite_from_embed[msg.embeds[0].url].delete()
-    except discord.errors.NotFound:
+    except (discord.errors.NotFound, KeyError):
       pass
     if len(channel.members) != 0:
         await channel.set_permissions(get_role_everyone(bot), connect=True)
@@ -146,9 +146,9 @@ async def check_profile(member, vclient):
                             print("error updating username. it would've been set to " + valName + "#" + valTag)
 
 
-async def create_embed(executor, bot):
+async def create_embed(executor, argument, bot):
   channel = executor.voice.channel
-  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates, click the link below to join.")
+  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates: " + argument)
   embed.add_field(name="Rank:", value=get_rank(executor).name)
   embed.add_field(name="Players:", value=str(len(executor.voice.channel.members))+"/5")
   invite = await channel.create_invite(max_age=900, max_uses=0, temporary=False, unique=False, reason="Temp Inv")

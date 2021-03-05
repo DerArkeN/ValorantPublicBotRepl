@@ -4,13 +4,13 @@ old_channel_map = {}
 reaction_map = {}
 
 
-async def lft(ctx, bot):
+async def lft(ctx, argument, bot):
     if ctx.channel == methods.get_channel_lft(bot):
         dcUser = ctx.author
         if dcUser.voice is not None:
             if dcUser.voice.channel.category == methods.get_voice_create_channel(
                     bot).category:
-                await methods.set_lft(dcUser, bot)
+                await methods.set_lft(dcUser, argument, bot)
             else:
                 await methods.get_channel_support(bot).send(
                     ctx.author.mention +
@@ -26,41 +26,6 @@ async def lft(ctx, bot):
             ctx.author.mention + ", you can't use this command here, got to " +
             methods.get_channel_lft(bot).mention,
             delete_after=30)
-
-
-# async def lft_event_add(reaction, user, bot):
-#     user_role = methods.get_rank(user)
-#     member_position = user_role.position
-#     if reaction.message.author.bot:
-#         if user.voice is not None:
-#             old_channel_map[reaction] = user.voice.channel
-#             lft_author = await methods.get_executor(reaction.message, bot)
-#             channel_to_move = lft_author.voice.channel
-#             channel_members = channel_to_move.members
-#             if user != lft_author:
-#                 if not any(abs(methods.get_rank(member).position - member_position) > 3 for member in channel_members):
-#                     await user.move_to(channel_to_move)
-#                     reaction_map[user] = reaction
-#                     await reaction.message.edit(embed=await methods.create_embed(lft_author, bot))
-#                 else:
-#                     await methods.get_channel_support(bot).send(
-#                         content=user.mention + ", there are people with too high ranks for you in this channel.",
-#                         delete_after=30)
-#                     await reaction.remove(user)
-#             else:
-#                 await reaction.remove(lft_author)
-#         else:
-#             await methods.get_channel_support(bot).send(
-#                 content=user.mention + ", you have to be in a voice channel to use this reaction", delete_after=30)
-#             await reaction.remove(user)
-
-# async def lft_event_remove(reaction, user, bot):
-#     if reaction.message.author.bot:
-#         if user.voice is not None:
-#             lft_author = await methods.get_executor(reaction.message, bot)
-#             await user.move_to(old_channel_map[reaction])
-#             del old_channel_map[reaction]
-#             await reaction.message.edit(embed=await methods.create_embed(lft_author, bot))
 
 
 async def lft_leave_channel(member, before, bot):
@@ -84,7 +49,7 @@ async def lft_join_channel(member, after, bot):
         channel_members = after.channel.members
         channel_members.remove(member)
         if any(abs(methods.get_rank(members).position - methods.get_rank(member).position) > 3 for members in channel_members):
-            await member.move_to(methods.get_voice_wtf(bot))
+            await member.move_to(None)
             await methods.get_channel_support(bot).send(
                 member.mention +
                 ", you are not able to play with users in this channel since the rank difference is too high.",

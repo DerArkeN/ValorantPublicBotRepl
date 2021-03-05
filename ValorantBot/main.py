@@ -54,17 +54,6 @@ async def on_message(message):
             await message.delete()
 
 
-# @bot.event
-# async def on_reaction_add(reaction, user):
-#     if not user.bot:
-#         await lft.lft_event_add(reaction, user, bot)
-
-
-# @bot.event
-# async def on_reaction_remove(reaction, user):
-#     await lft.lft_event_remove(reaction, user, bot)
-
-
 @bot.event
 async def on_voice_state_update(member, before, after):
     join_to_create = methods.get_voice_create_channel(bot)
@@ -94,10 +83,8 @@ async def on_voice_state_update(member, before, after):
                     if len(after.channel.members) >= 5:
                         if sql.channel_exists(after.channel):
                             await methods.set_closed(after.channel, bot)
-
                     # check rank
                     await lft.lft_join_channel(member, after, bot)
-
 
 
 @bot.command(name="register", pass_context=True)
@@ -111,8 +98,9 @@ async def rank_command(ctx, role=None):
 
 
 @bot.command(name="lft", pass_context=True)
-async def lft_command(ctx):
-    await lft.lft(ctx, bot)
+async def lft_command(ctx, *arguments):
+    msg = ' '.join(arguments)
+    await lft.lft(ctx, msg, bot)
 
 
 @bot.command(name="update", pass_context=True)
@@ -128,7 +116,7 @@ async def close_command(ctx):
         if sql.channel_exists(ctx.author.voice.channel):
             await methods.set_closed(ctx.author.voice.channel, bot)
         else:
-            await bot.get_channel(806112383693094942).send(
+            await methods.get_channel_support(bot).send(
                 content=ctx.author.mention +
                 ", you need to use !lft before using !close.",
                 delete_after=30)
