@@ -5,10 +5,66 @@ import discord
 from dotenv import load_dotenv
 from discord.utils import get
 from util import sql
+from replit import db
 
 load_dotenv()
 
 invite_from_embed = {}
+
+ranks_dict = {
+            "Iron 1": ["Iron 1", "Iron 2", "Iron 3",
+                       "Bronze 1", "Bronze 2", "Bronze 3",
+                       "Silver 1", "Silver 2", "Silver 3"],
+            "Iron 2": ["Iron 1", "Iron 2", "Iron 3",
+                       "Bronze 1", "Bronze 2", "Bronze 3",
+                       "Silver 1", "Silver 2", "Silver 3"],
+            "Iron 3": ["Iron 1", "Iron 2", "Iron 3",
+                       "Bronze 1", "Bronze 2", "Bronze 3",
+                       "Silver 1", "Silver 2", "Silver 3"],
+            "Silver 1": ["Iron 1", "Iron 2", "Iron 3",
+                         "Bronze 1", "Bronze 2", "Bronze 3",
+                         "Silver 1", "Silver 2", "Silver 3",
+                         "Gold 1", "Gold 2", "Gold 3"],
+            "Silver 2": ["Iron 1", "Iron 2", "Iron 3",
+                         "Bronze 1", "Bronze 2", "Bronze 3",
+                         "Silver 1", "Silver 2", "Silver 3",
+                         "Gold 1", "Gold 2", "Gold 3"],
+            "Silver 3": ["Iron 1", "Iron 2", "Iron 3",
+                         "Bronze 1", "Bronze 2", "Bronze 3",
+                         "Silver 1", "Silver 2", "Silver 3",
+                         "Gold 1", "Gold 2", "Gold 3"],
+            "Gold 1": ["Silver 1", "Silver 2", "Silver 3",
+                       "Gold 1", "Gold 2", "Gold 3",
+                       "Platinum 1", "Platinum 2", "Platinum 3"],
+            "Gold 2": ["Silver 1", "Silver 2", "Silver 3",
+                       "Gold 1", "Gold 2", "Gold 3",
+                       "Platinum 1", "Platinum 2", "Platinum 3"],
+            "Gold 3": ["Silver 1", "Silver 2", "Silver 3",
+                       "Gold 1", "Gold 2", "Gold 3",
+                       "Platinum 1", "Platinum 2", "Platinum 3"],
+            "Platinum 1": ["Gold 1", "Gold 2", "Gold 3",
+                           "Platinum 1", "Platinum 2", "Platinum 3",
+                           "Diamond 1"],
+            "Platinum 2": ["Gold 1", "Gold 2", "Gold 3",
+                           "Platinum 1", "Platinum 2", "Platinum 3",
+                           "Diamond 1", "Diamond 2"],
+            "Platinum 3": ["Gold 1", "Gold 2", "Gold 3",
+                           "Platinum 1", "Platinum 2", "Platinum 3",
+                           "Diamond 1", "Platinum 3"],
+            "Diamond 1": ["Platinum 1", "Platinum 2", "Platinum 3",
+                          "Diamond 1", "Diamond 2", "Diamond 3",
+                          "Immortal"],     
+            "Diamond 2": ["Platinum 2", "Platinum 3",
+                          "Diamond 1", "Diamond 2", "Diamond 3",
+                          "Immortal"],
+            "Diamond 3": ["Platinum 3",
+                          "Diamond 1", "Diamond 2", "Diamond 3",
+                          "Immortal"],
+            "Immortal": ["Diamond 1", "Diamond 2", "Diamond 3",
+                         "Immortal",
+                         "Radiant"],
+            "Radiant": ["Immortal", "Radiant"]                              
+}
 
 valid_roles = ["Iron 1", "Iron 2", "Iron 3",
                "Bronze 1", "Bronze 2", "Bronze 3",
@@ -44,13 +100,13 @@ async def get_channel(executor_or_message, bot):
     return await bot.get_channel(id)
 
 
-async def set_lft(executor, argument, bot):
+async def set_lft(executor, bot):
     if not sql.executor_exists(executor):
         channel = executor.voice.channel
         lft_channel = get_channel_lft(bot)
 
         await channel.set_permissions(get_role_everyone(bot), connect=False)
-        msg = await lft_channel.send(embed=await create_embed(executor, argument, bot), delete_after=900)
+        msg = await lft_channel.send(embed=await create_embed(executor, bot), delete_after=900)
         sql.insert_lftdata(executor, msg, channel)
 
 
@@ -84,7 +140,6 @@ def get_rank(dcUser):
     roles_NAME = [roles_ROLE.name for roles_ROLE in roles_ROLES]
     roles_NAME_filtered = numpy.setdiff1d(roles_NAME, unvalid_roles)
     roles_NAME_filtered = roles_NAME_filtered.tolist()
-    roles_NAME_filtered.remove("@everyone")
 
     if roles_NAME_filtered:
         role = get(dcUser.guild.roles, name=roles_NAME_filtered[0])
@@ -149,15 +204,27 @@ async def check_profile(member, vclient):
                             print("error updating username. it would've been set to " + valName + "#" + valTag)
 
 
-async def create_embed(executor, argument, bot):
-  channel = executor.voice.channel
-  embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates: " + argument)
-  embed.add_field(name="Rank:", value=get_rank(executor).name)
-  embed.add_field(name="Players:", value=str(len(executor.voice.channel.members))+"/5")
-  invite = await channel.create_invite(max_age=900, max_uses=0, temporary=False, unique=False, reason="Temp Inv")
-  embed.add_field(name="Join Channel:", value="[Click to join]("+invite.url+")")
-  invite_from_embed[embed.url] = invite
-  return embed
+async def create_embed(executor, bot):
+    channel = executor.voice.channel
+    argument = db[executor.id]
+
+    embed = discord.Embed(title=executor.nick+" is looking for teammates", color=0x00ff00, description=executor.mention+" is looking for teammates: " + argument)
+    embed.add_field(name="Rank:", value=get_rank(executor).name)
+    embed.add_field(name="Players:", value=str(len(executor.voice.channel.members))+"/5")
+    invite = await channel.create_invite(max_age=900, max_uses=0, temporary=False, unique=False, reason="Temp Inv")
+    embed.add_field(name="Join Channel:", value="[Click to join]("+invite.url+")")
+    invite_from_embed[embed.url] = invite
+    return embed
+
+
+def rank_allowed(member, channel):
+  member_rank = get_rank(member).name
+  channel_members = channel.members
+
+  if all(member_rank in ranks_dict[get_rank(channel_member).name] for channel_member in channel_members):
+      return True
+  else:
+      return False
 
 
 def execute_move(member):

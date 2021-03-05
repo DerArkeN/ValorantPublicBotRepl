@@ -2,6 +2,7 @@ import os
 import valorant
 import discord
 
+from replit import db
 from discord.ext import commands
 from dotenv import load_dotenv
 #from keep_alive import keep_alive
@@ -19,7 +20,6 @@ intents.presences = True
 
 vclient = valorant.Client(os.getenv("KEY"))
 bot = commands.Bot(command_prefix="!", intents=intents)
-
 
 @bot.event
 async def on_ready():
@@ -100,7 +100,8 @@ async def rank_command(ctx, role: discord.Role):
 @bot.command(name="lft", pass_context=True)
 async def lft_command(ctx, *arguments):
     msg = ' '.join(arguments)
-    await lft.lft(ctx, msg, bot)
+    db[ctx.author.id] = msg
+    await lft.lft(ctx, bot)
 
 
 @bot.command(name="update", pass_context=True)

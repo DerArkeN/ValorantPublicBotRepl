@@ -11,6 +11,7 @@ flask = "^1.1.2"
 python-dotenv = "^0.15.0"
 valorant = "^0.3.1"
 mysql-connector = "^2.2.9"
+replit = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 

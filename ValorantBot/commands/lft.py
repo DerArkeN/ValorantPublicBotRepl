@@ -1,16 +1,12 @@
 from util import methods, sql
 
-old_channel_map = {}
-reaction_map = {}
-
-
-async def lft(ctx, argument, bot):
+async def lft(ctx, bot):
     if ctx.channel == methods.get_channel_lft(bot):
         dcUser = ctx.author
         if dcUser.voice is not None:
             if dcUser.voice.channel.category == methods.get_voice_create_channel(
                     bot).category:
-                await methods.set_lft(dcUser, argument, bot)
+                await methods.set_lft(dcUser, bot)
             else:
                 await methods.get_channel_support(bot).send(
                     ctx.author.mention +
@@ -32,23 +28,22 @@ async def lft_leave_channel(member, before, bot):
     if member.nick is not None:
         if sql.channel_exists(before.channel):
             if not sql.executor_exists(member):
-                lft_author = await methods.get_executor(before.channel, bot)
-                message = await methods.get_msg(before.channel, bot)
-                await message.edit(
-                    embed=await methods.create_embed(lft_author, bot))
+                try:
+                    lft_author = await methods.get_executor(before.channel, bot)
+                    message = await methods.get_msg(before.channel, bot)
+                    await message.edit(
+                        embed=await methods.create_embed(lft_author, bot))
+                except AttributeError:
+                    pass
             else:
                 await methods.set_casual(before.channel, bot)
-                [
-                    reaction_map.pop(member, None)
-                    for member in before.channel.members
-                ]
 
 
 async def lft_join_channel(member, after, bot):
     if sql.channel_exists(after.channel):
         channel_members = after.channel.members
         channel_members.remove(member)
-        if any(abs(methods.get_rank(members).position - methods.get_rank(member).position) > 3 for members in channel_members):
+        if not methods.rank_allowed(member, after.channel):
             await member.move_to(None)
             await methods.get_channel_support(bot).send(
                 member.mention +
